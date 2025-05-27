@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monitor Bioeléctrico</title>
+  
+  <!-- Chart.js y plugin para la aguja -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0"></script>
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      background-color: #1E78D1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+      transform: scale(1.03);
+    }
+
+    select {
+      width: 60%;
+      padding: 10px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background-color: #1e1e1e;
+      color: #fff;
+      margin: 10px auto;
+      display: block;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 15px auto;
+      padding: 10px;
+      border: 1px dashed #888;
+      border-radius: 8px;
+      background-color: #1c1c1c;
+      color: #ccc;
+      cursor: pointer;
+      transition: border 0.3s ease;
+    }
+
+    input[type="file"]:hover {
+      border: 1px dashed #1E78D1;
+    }
+
+    .card {
+      background: rgba(35, 35, 35, 0.5);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+      color: white;
+      
+    }
+
+    .values {
+      display: flex;
+      justify-content: space-around;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .gauge-container {
+      width: 200px;
+      height: 200px;
+      margin: auto;
+      position: relative;
+    }
+
+    .gauge-value {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 42px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .bar-container {
+      height: 24px;
+      width: 100%;
+      background: linear-gradient(to right, #51d143, #ffc107, #f44336);
+      border-radius: 15px;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 4px;
+      padding: 0 10px;
+    }
+
+    .indicator {
+      width: 4px;
+      height: 32px;
+      background: white;
+      position: absolute;
+      top: -4px;
+      transition: left 0.3s ease;
+    }
+
+    .gauge-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 1rem;
+      margin: auto;
+      width: fit-content;
+    }
+
+    .bpm-text {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1rem;
+      font-size: 14px;
+      background-color: #1f1f1f;
+      color: white;
+    }
+
+    table th {
+      background-color: #333;
+      color: #fff;
+    }
+
+    table td, table th {
+      border: 1px solid #444;
+      padding: 8px;
+    }
+
+    ul {
+      margin-top: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding-left: 20px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.75);
+    }
+
+    .modal-content {
+      background-color: #1e1e1e;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      color: #fff;
+      font-size: 15px;
+      line-height: 1.6;
+      box-shadow: 0 0 8px rgba(56, 56, 56, 0.83);
+    }
+
+    .close {
+      color: #e1dfdf;
+      float: right;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #ayudaBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .tarjetas-garmin {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    min-height: 230px;
+    }
+
+    .gauge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 1rem;
+    min-height: 230px; /* para que iguale la altura de los otros */
+  }
+  .card h3 {
+    position: relative;       /* Necesario para que funcione z-index */
+    z-index: 2;               /* Asegura que se dibuje encima */
+    margin-top: -25px;         /* Para separarlo del borde */
+    margin-bottom: 1rem;
+    font-size: 20px;
+    font-weight: 300;
+    background: transparent;  /* Asegura que no tape nada con color */
+    text-align: center;
+  }
+
+  
+    .tarjetas-garmin .card {
+    display: grid;
+    flex-direction: column;
+
+    #bpmCanvasWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    }
+
+    #bpmCanvasWrapper canvas {
+      display: block;
+      margin: 0 auto;
+    }
+
+  }
+
+
+  .hrv-bar {
+    background: linear-gradient(to right, #f44336, #ffc107, #51d143); /* Rojo → Verde */
+  }
+
+
+  .titulo-destacado {
+    font-family: 'Rubik', sans-serif;
+    font-size: 48px;
+    font-weight: 20;
+    color: #299ef8;
+    text-align: center;
+    margin: 30px 0 10px;
+    letter-spacing: 6px;
+    text-shadow: 0 2px 4px rgba(185, 185, 185, 0.422);
+  }
+    .card-titulo-linea {
+      position: relative;
+      padding-top: 30px;
+      margin-top: 20px;
+    }
+
+    .card-titulo-linea::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 35px;
+      background-color: #2e2d2d; /* gris medio estilo Garmin */
+      border-radius: 12px;
+    }
+
+    .card-titulo-linea h2 {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2e2d2d;
+      padding: 0 12px;
+      font-size: 20px;
+      font-weight: 300;
+      color: white;
+    }
+
+
+  </style>
+</head>
+
+<body>
+
+
+  <div class="container">
+    <h1 class="titulo-destacado">MyoCard</h1>
+    <button id="connectBtn">Conectar dispositivo</button>
+
+    <!-- EMG -->
+    <div class="card card-titulo-linea">
+      <h2>EMG</h2>
+      <div class="values">
+        <p id="rmsVal">RMS: --</p>
+        <p id="mfVal">MF: --</p>
+      </div>
+      <canvas id="rmsChart" width="400" height="150"></canvas>
+    </div>
+ 
+      <!-- Garmin Metrics -->
+    <div class="tarjetas-garmin">
+
+        <!-- BPM Gauge -->
+        <div class="card card-titulo-linea">
+          <h3 style="margin-bottom: 1rem;"> Frecuencia cardíaca</h3>
+          
+          <!-- Envoltorio exclusivo para centrar el canvas -->
+          <div id="bpmCanvasWrapper">
+            <canvas id="bpmGauge" width="180" height="180"></canvas>
+          </div>
+
+          <div class="bpm-text"><span id="bpmVal">--</span> bpm</div>
+        </div>
+
+
+      <!-- HRV -->
+      <div class="card card-titulo-linea">
+        <h3>HRV</h3>
+        <div class="bar-container hrv-bar"> <!-- clase añadida aquí -->
+          <div class="indicator" id="hrvIndicator" style="left: 50%;"></div>
+        </div>
+        <div class="bar-labels"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+        <p style="margin-top: 0.5rem;">HRV: <span id="hrvVal">--</span> ms</p>
+      </div>
+
+
+      <!-- Fatiga -->
+      <div class="card card-titulo-linea">
+        <h3>Nivel de fatiga</h3>
+        <div class="bar-container">
+          <div class="indicator" id="fatigaIndicator" style="left: 0%;"></div>
+        </div>
+        <div class="bar-labels"><span>Normal</span><span>Moderada</span><span>Alta</span></div>
+        <p style="margin-top: 0.5rem;">Nivel: <span id="fatigaIndex">--</span></p>
+      </div>
+
+    </div>
+
+
+
+    <!-- Control por Fase -->
+    <div class="card card-titulo-linea">
+      <h2>Control de Sesión por Fase</h2>
+      <p style="font-size: 14px; color: gray;">
+        
+        Selecciona la fase de entrenamiento y comienza a grabar la sesión.
+      </p>
+      <select id="faseSelect">
+        <option value="Pre">Pre</option>
+        <option value="Durante">Durante</option>
+        <option value="Post">Post</option>
+      </select>
+      <button onclick="iniciarSesion()">Iniciar Almacenamiento</button>
+      <button onclick="detenerSesion()">Detener y Exportar</button>
+
+    </div>
+
+  
+
+    <!-- Análisis Semanal -->
+    <div class="card card-titulo-linea">
+      <h2>Análisis Semanal de Sobreentrenamiento</h2>
+      <p style="font-size: 14px; color: gray;">
+        Comencemos con el análisis semanal para analizar la intensidad de entrenamiento.
+      </p>
+      <input type="file" id="archivoCSV" multiple accept=".csv" />
+      <button onclick="analizarSemana()">Analizar semana</button>
+      <div id="btnAyudaGraficas" style="display:none; margin-top:10px;">
+        <button onclick="mostrarInfoGraficas()">¿Qué significan estas gráficas?</button>
+      </div>
+      
+     
+      <div id="resultadoAnalisisSemana" style="margin-top: 20px;"></div>
+      <div style="margin-top: 30px;">
+        <canvas id="graficaHRV" height="150"></canvas>
+        <canvas id="graficaBPM" height="150" style="margin-top: 20px;"></canvas>
+        <canvas id="graficaFatiga" height="150" style="margin-top: 20px;"></canvas>
+        <canvas id="graficaMF" height="150" style="margin-top: 20px;"></canvas>
+        <canvas id="graficaRMS" height="150" style="margin-top: 20px;"></canvas>
+        <canvas id="graficaResumenEstiloGarmin" height="150" style="margin-top: 30px;"></canvas>
+
+
+      
+      </div>
+      <p style="font-size: 14px; color: gray;">
+        * Sube los 3 archivos por día (Pre, Durante, Post) de al menos 3 días distintos para el análisis semanal.
+      </p>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+<!-- MODAL de ayuda -->
+<div id="ayudaModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal()">&times;</span>
+    <h2>📊 Interpretación de Gráficas y Recomendaciones</h2>
+    <p><strong>HRV:</strong> Caídas >20–30% indican alto estrés. HRV baja día a día refleja fatiga acumulada.</p>
+    <p><strong>BPM:</strong> Aumento progresivo de BPM Pre puede indicar fatiga residual. Post >120 sugiere mala recuperación.</p>
+    <p><strong>MF:</strong> Caída >10–15% en Post sugiere fatiga muscular localizada. MF baja en Durante indica fatiga durante la sesión.</p>
+    <p><strong>RMS:</strong> Aumento >10% en Post indica esfuerzo muscular mayor (fatiga neuromuscular).</p>
+    <p><strong>Índice de Fatiga:</strong> >0.6 = fatiga alta. Días consecutivos indican sobreentrenamiento.</p>
+    
+    <p><strong>Comparativa Diaria:</strong> Tabla con indicadores clave por día. Las columnas muestran cambios porcentuales entre fases Pre y Post. Si hay alerta roja 🔴, es un posible signo de fatiga o sobreentrenamiento.</p>
+    <ul>
+
+    <hr>
+    <h3>💡 Recomendaciones</h3>
+    <ul>
+      <li><strong>🟢 Recuperación Adecuada:</strong> continúa con tu plan actual.</li>
+      <li><strong>🟡 Fatiga Leve Acumulada:</strong> considera una jornada de recuperación activa.</li>
+      <li><strong>🟥 Posible Sobreentrenamiento:</strong> toma descanso total. Ajusta intensidad y volumen.</li>
+    </ul>
+    <p style="font-size: 13px; color: #ccc; margin-top: 1rem;">
+      * Este análisis está basado en criterios fisiológicos de HRV, BPM, EMG y nivel de fatiga acumulada.
+    </p>
+  </div>
+</div>
+
+<!-- Botón flotante para abrir -->
+<button onclick="abrirModal()" id="ayudaBtn">ℹ️ ¿Cómo interpretar?</button>
+<div id="infoGraficasPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; color:white; overflow-y:auto;">
+  <div style="max-width:800px; margin:50px auto; background:#1f1f1f; padding:20px; border-radius:12px;">
+    <h2 style="text-align:center;">📊 Guía de Interpretación de Gráficas</h2>
+
+    <p><strong>Gráficas de Fases (Pre, Durante, Post):</strong> Muestran cómo cambian los parámetros cada día según el momento de la sesión.</p>
+    <ul>
+      <li><strong>HRV</strong>: Alta en Pre y baja en Post indica poca recuperación.</li>
+      <li><strong>BPM</strong>: Alto en Pre o lento descenso en Post = fatiga cardiovascular.</li>
+      <li><strong>MF</strong>: Baja en Post sugiere pérdida de potencia muscular.</li>
+      <li><strong>RMS</strong>: Subida en Post = esfuerzo extra para mantener rendimiento.</li>
+      <li><strong>Índice de Fatiga</strong>: Si se mantiene alto en todas las fases = alerta de fatiga.</li>
+    </ul>
+
+    <p><strong>Resumen Semanal:</strong> Muestra cuánto cambió cada parámetro durante la semana. Altos porcentajes de HRV↓, MF↓, BPM↑ y días con fatiga alta indican carga excesiva.</p>
+
+    <button onclick="cerrarInfoGraficas()" style="display:block;margin:20px auto;padding:10px 20px;background:#e53935;color:white;border:none;border-radius:8px;">Cerrar</button>
+  </div>
+</div>
+
+</html>
+
