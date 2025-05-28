@@ -322,7 +322,15 @@
   <div class="container">
     <h1 class="titulo-destacado">MyoCard</h1>
     <button id="connectBtn">Conectar dispositivo</button>
+    <div id="iosWarning" style="display:none; color: #ff6666; text-align: center; margin-top: 15px; font-weight: bold;">
+      🚫 Web Bluetooth no está disponible en iPhone. Usa un navegador en Android o PC (Chrome).
+    </div>
+    <p id="statusMensaje" style="text-align:center; display:none; color:white; margin-top:10px;"></p>
 
+    <div id="statusMensaje" style="display: none; color: #00bcd4; text-align: center; margin-top: 10px;">
+      🔄 Conectando dispositivo...
+    </div>
+    
     <!-- EMG -->
     <div class="card card-titulo-linea">
       <h2>EMG</h2>
@@ -356,7 +364,7 @@
           <div class="indicator" id="hrvIndicator" style="left: 50%;"></div>
         </div>
         <div class="bar-labels"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
-        <p style="margin-top: 0.5rem;">HRV: <span id="hrvVal">--</span> ms</p>
+        <p style="margin-top: 0.5rem;"> <span id="hrvVal">--</span> ms</p>
       </div>
 
 
@@ -367,7 +375,7 @@
           <div class="indicator" id="fatigaIndicator" style="left: 0%;"></div>
         </div>
         <div class="bar-labels"><span>Normal</span><span>Moderada</span><span>Alta</span></div>
-        <p style="margin-top: 0.5rem;">Nivel: <span id="fatigaIndex">--</span></p>
+        <p style="margin-top: 0.5rem;"> <span id="fatigaIndex">--</span></p>
       </div>
 
     </div>
@@ -456,7 +464,17 @@
 <!-- Botón flotante para abrir -->
 <button onclick="abrirModal()" id="ayudaBtn">ℹ️ ¿Cómo interpretar?</button>
 <div id="infoGraficasPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; color:white; overflow-y:auto;">
-  <div style="max-width:800px; margin:50px auto; background:#1f1f1f; padding:20px; border-radius:12px;">
+  <div style="
+    max-width: 800px;
+    margin: 50px auto;
+    background: #1f1f1f;
+    padding: 20px;
+    border-radius: 12px;
+    max-height: -50vh;
+    overflow-y: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  ">
+
     <h2 style="text-align:center;">📊 Guía de Interpretación de Gráficas</h2>
 
     <p><strong>Gráficas de Fases (Pre, Durante, Post):</strong> Muestran cómo cambian los parámetros cada día según el momento de la sesión.</p>
@@ -474,5 +492,16 @@
   </div>
 </div>
 
+<script>
+  function esDispositivoIOS() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+  if (esDispositivoIOS()) {
+    document.getElementById('iosWarning').style.display = 'block';
+  }
+</script>
+
 </html>
+
 
