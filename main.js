@@ -27,20 +27,43 @@ let faseActual = "";
 let intervaloAlmacenamiento = null;
 
 function connectBLE() {
+  const statusMensaje = document.getElementById('statusMensaje');
+  statusMensaje.textContent = '🔄 Conectando dispositivo...';
+  statusMensaje.style.display = 'block';
+  statusMensaje.style.color = 'white';
+
   navigator.bluetooth.requestDevice({
     filters: [{ namePrefix: 'ESP32' }],
     optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
   })
-  .then(device => device.gatt.connect())
-  .then(server => server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb'))
-  .then(service => service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb'))
-  .then(characteristic => {
-    characteristic.startNotifications();
-    characteristic.addEventListener('characteristicvaluechanged', handleData);
-    console.log("Conectado al ESP32");
-  })
-  .catch(console.error);
+    .then(device => device.gatt.connect())
+    .then(server => server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb'))
+    .then(service => service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb'))
+    .then(characteristic => {
+      characteristic.startNotifications();
+      characteristic.addEventListener('characteristicvaluechanged', handleData);
+      console.log("Conectado al ESP32");
+
+      statusMensaje.textContent = '✅ Dispositivo conectado correctamente';
+      statusMensaje.style.color = '#4caf50';
+
+      // Oculta el mensaje tras 2.5 segundos
+      setTimeout(() => {
+        statusMensaje.style.display = 'none';
+      }, 2500);
+    })
+    .catch(error => {
+      console.error(error);
+      statusMensaje.textContent = '❌ Error al conectar dispositivo';
+      statusMensaje.style.color = '#f44336';
+
+      // Oculta el mensaje tras 3 segundos
+      setTimeout(() => {
+        statusMensaje.style.display = 'none';
+      }, 3000);
+    });
 }
+
 function handleData(event) {
   const decoder = new TextDecoder('utf-8');
   const data = decoder.decode(event.target.value).trim();
